@@ -28,8 +28,8 @@ public class TurnBasedInput : MonoBehaviour
         _undo.onClick.AddListener( () => commandsHandeler.UndoCommand());
         _redo.onClick.AddListener( () => commandsHandeler.RedoCommand());
 
-        commandsHandeler.OnCommandStackEmpty.AddListener(() => { _undo.enabled = false;});
-        commandsHandeler.OnCommandStackFull.AddListener(() => { _undo.enabled = true;});
+        commandsHandeler.OnCommandStackEmpty += () => _undo.enabled = false;
+        commandsHandeler.OnCommandStackFull  += () => _undo.enabled = true;
     }
 
     private void SendMoveCommand(Transform objectToMove, Vector3 direction, float distance = 1f)

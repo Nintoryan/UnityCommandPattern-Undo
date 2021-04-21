@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,10 +10,11 @@ public class CommandsHandeler : MonoBehaviour
     private readonly List<ICommand> commandList = new List<ICommand>();
     private readonly Queue<UnityEvent> ActualExecutionQueue = new Queue<UnityEvent>();
 
-    [HideInInspector] public UnityEvent OnCommandStackEmpty = new UnityEvent();
-    [HideInInspector] public UnityEvent OnCommandStackFull = new UnityEvent();
-    
-    [SerializeField] private TMP_Text commandsLog;
+    public UnityAction OnCommandStackEmpty;
+    public UnityAction OnCommandStackFull;
+    public UnityAction<List<ICommand>> OnStackUpdate;
+
+    private List<ICommand> _currentCommandList => commandList.GetRange(0, index);
 
     private int index;
     private Coroutine ExecutionSeq;
@@ -36,7 +38,8 @@ public class CommandsHandeler : MonoBehaviour
         
         index++;
         OnCommandStackFull?.Invoke();
-        UpdateCommandsLog();
+        
+        OnStackUpdate?.Invoke(_currentCommandList);
     }
 
     // ReSharper disable once FunctionRecursiveOnAllPaths
@@ -63,7 +66,7 @@ public class CommandsHandeler : MonoBehaviour
         {
             OnCommandStackEmpty?.Invoke();
         }
-        UpdateCommandsLog();
+        OnStackUpdate?.Invoke(_currentCommandList);
     }
 
     public void RedoCommand()
@@ -75,16 +78,9 @@ public class CommandsHandeler : MonoBehaviour
             ue.AddListener(commandList[index-1].Execute);
             ActualExecutionQueue.Enqueue(ue);
             OnCommandStackFull?.Invoke();
-            UpdateCommandsLog();
+            OnStackUpdate?.Invoke(_currentCommandList);
         }
     }
 
-    private void UpdateCommandsLog()
-    {
-        commandsLog.text = "Commands:\n";
-        for(int i = 0; i<index; i++)
-        {
-            commandsLog.text += commandList[i].GetName() + "\n";
-        }
-    }
+    
 }
